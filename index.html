@@ -7,6 +7,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lab 9</title>
 
+  <!-- trackjs - replace YOUR_TOKEN_HERE with the token from your TrackJS dashboard -->
+  <script type="text/javascript">window._trackJs = { token: '78be73ba461c4953a1f9efd4930b6003' };</script>
+  <script type="text/javascript" src="https://cdn.trackjs.com/agent/v3/latest/t.js"></script>
+
   <style>
     button {
       margin: 3px;
@@ -88,20 +92,157 @@
   </main>
 
   <script>
+    // custom error class - extends Error to carry which field had the bad value
+    // instanceof still works, and the name shows up properly in the console
+    class ValidationError extends Error {
+      constructor(message, field) {
+        super(message);
+        this.name = 'ValidationError';
+        this.field = field;
+      }
+    }
+
     let form = document.querySelector('form');
     form.addEventListener('submit', e => {
       e.preventDefault();
-      let output = document.querySelector('output');
-      let firstNum = document.querySelector('#first-num').value;
-      let secondNum = document.querySelector('#second-num').value;
-      let operator = document.querySelector('#operator').value;
-      output.innerHTML = eval(`${firstNum} ${operator} ${secondNum}`);
+
+      // try/catch/finally demo - the calculator is a realistic place for this
+      // to see a different kind of error, try commenting out the <output> element in the HTML
+      try {
+        let firstNum = Number(document.querySelector('#first-num').value);
+        let secondNum = Number(document.querySelector('#second-num').value);
+        let operator = document.querySelector('#operator').value;
+
+        if (isNaN(firstNum)) {
+          throw new ValidationError('must be a number', 'first input');
+        }
+        if (isNaN(secondNum)) {
+          throw new ValidationError('must be a number', 'second input');
+        }
+
+        if (operator === '/' && secondNum === 0) {
+          throw new RangeError('cannot divide by zero');
+        }
+
+        let result = eval(`${firstNum} ${operator} ${secondNum}`);
+
+        // throws a TypeError on its own if <output> is commented out
+        document.querySelector('output').innerHTML = result;
+
+      } catch (e) {
+        if (e instanceof ValidationError) {
+          // we know exactly what went wrong - can be specific about it
+          console.error(`validation error in ${e.field}:`, e.message);
+          document.querySelector('output').innerHTML = `${e.field}: ${e.message}`;
+        } else {
+          // something unexpected - log the full error
+          console.error('unexpected error:', e);
+          document.querySelector('output').innerHTML = `error: ${e.message}`;
+        }
+      } finally {
+        console.log('calculation attempt finished');
+      }
     });
 
     let errorBtns = Array.from(document.querySelectorAll('#error-btns > button'));
 
     // Start your code here
     // You may move this JS to another file if you wish
+
+    const sampleData = [
+      { name: 'Alice', age: 25, role: 'Engineer' },
+      { name: 'Bob', age: 30, role: 'Designer' },
+      { name: 'Carol', age: 27, role: 'Manager' },
+    ];
+
+    // console log
+    errorBtns[0].addEventListener('click', () => {
+      console.log('sample data:', sampleData);
+    });
+
+    // console error
+    errorBtns[1].addEventListener('click', () => {
+      console.error('something went wrong!');
+    });
+
+    // console count
+    errorBtns[2].addEventListener('click', () => {
+      console.count('button clicks');
+    });
+
+    // console warn
+    errorBtns[3].addEventListener('click', () => {
+      console.warn('this is a warning');
+    });
+
+    // console assert
+    errorBtns[4].addEventListener('click', () => {
+      console.assert(1 === 2, '1 does not equal 2');
+    });
+
+    // console clear
+    errorBtns[5].addEventListener('click', () => {
+      console.clear();
+    });
+
+    // console dir
+    errorBtns[6].addEventListener('click', () => {
+      console.dir(document.querySelector('form'));
+    });
+
+    // console dirxml
+    errorBtns[7].addEventListener('click', () => {
+      console.dirxml(document.querySelector('form'));
+    });
+
+    // console group start
+    errorBtns[8].addEventListener('click', () => {
+      console.group('people group');
+      console.log('first:', sampleData[0]);
+      console.log('second:', sampleData[1]);
+    });
+
+    // console group end
+    errorBtns[9].addEventListener('click', () => {
+      console.groupEnd();
+    });
+
+    // console table
+    errorBtns[10].addEventListener('click', () => {
+      console.table(sampleData);
+    });
+
+    // start timer
+    errorBtns[11].addEventListener('click', () => {
+      console.time('demo-timer');
+    });
+
+    // end timer
+    errorBtns[12].addEventListener('click', () => {
+      console.timeEnd('demo-timer');
+    });
+
+    // console trace
+    errorBtns[13].addEventListener('click', () => {
+      console.trace('trace called here');
+    });
+
+    // window.onerror catches any unhandled error that bubbles up to the global scope
+    window.onerror = function(message, source, lineno, colno, error) {
+      console.log('global error caught by window.onerror');
+      console.log('message:', message);
+      console.log('source:', source);
+      console.log('line:', lineno, 'col:', colno);
+      console.log('error object:', error);
+      return true; // prevents the browser from also logging it in red
+    };
+
+    // trigger a global error 
+    errorBtns[14].addEventListener('click', () => {
+      setTimeout(() => {
+        document.querySelector('#nonexistent-element').value;
+      }, 0);
+    });
   </script>
 </body>
 
